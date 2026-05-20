@@ -68,6 +68,7 @@ class ImagesResource {
   static const String pngIcMotorbike =  'assets/icons/motorbike_icon.png';
   static const String pngIcParking =  'assets/icons/Parking_icon.png';
   static const String pngIcShare =  'assets/icons/Share_icon.png';
+  static const String pngIcUserDot = 'assets/icons/user_dot.png';
 
   //Logo
 

@@ -1,6 +1,7 @@
 import 'package:dscity_mobile_app/core/theme/app_colors.dart';
 import 'package:dscity_mobile_app/features/home/page/home_page.dart';
 import 'package:dscity_mobile_app/features/home_navigation/provider/home_provider.dart';
+import 'package:dscity_mobile_app/features/map/page/map_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,7 +23,7 @@ class _HomeNavigationPageState extends ConsumerState<HomeNavigationPage> {
 
   static const List<Widget> _tabs = <Widget>[
     HomePage(),
-    Text('Bản đồ'),
+    MapPage(),
     Text('Đặt chỗ'),
     Text('Thông báo'),
     Text('Tài khoản'),
