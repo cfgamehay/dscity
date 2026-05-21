@@ -13,6 +13,7 @@ class CustomTextField extends StatefulWidget {
     this.isPassword = false,
     this.controller,
     this.onChanged,
+    this.onTap,
     this.textAlign = TextAlign.start,
     this.initialValue,
     this.keyboardType,
@@ -42,6 +43,7 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap;
   final TextAlign textAlign;
   final String? initialValue;
   final TextInputType? keyboardType;
@@ -120,6 +122,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     );
 
     final field = TextFormField(
+      onTap: widget.onTap,
       cursorColor: AppColors.primary,
       autofocus: widget.autofocus,
       readOnly: widget.readOnly,

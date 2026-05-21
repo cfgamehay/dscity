@@ -31,7 +31,27 @@ class MapProvider extends Notifier<MapState>{
       priceText: '15.000/giờ',
     ),
     RentalLocation(
-      id: '3',
+      id: '99',
+      name: 'Bãi đậu xe Skyline',
+      latitude: 10.938900,
+      longitude: 106.877700,
+      type: MapFilterType.parking,
+      distanceText: '250m',
+      statusText: 'Còn chỗ',
+      priceText: '25.000/giờ',
+    ),
+    RentalLocation(
+      id: '98',
+      name: 'Bãi đậu xe Skyline',
+      latitude: 10.938900,
+      longitude: 106.877700,
+      type: MapFilterType.parking,
+      distanceText: '250m',
+      statusText: 'Còn chỗ',
+      priceText: '25.000/giờ',
+    ),
+    RentalLocation(
+      id: '97',
       name: 'Bãi đậu xe Skyline',
       latitude: 10.938900,
       longitude: 106.877700,
@@ -65,6 +85,7 @@ class MapProvider extends Notifier<MapState>{
   MapState build() {
     return const MapState();
   }
+//LOADING
 
   Future<void> _loadUserLocation() async {
     final position = await LocationService.getCurrentPosition();
@@ -85,22 +106,45 @@ class MapProvider extends Notifier<MapState>{
     state = state.copyWith(isLoading: true);
     await _loadUserLocation();
     await Future<void>.delayed(const Duration(milliseconds: 300));
-    _applyFilter(state.selectedFilter);
+    _applyFilters();
     state = state.copyWith(isLoading: false);
+  }
+
+  //FILTER
+
+  void updateSearchKeyword(String value) {
+    state = state.copyWith(searchKeyword: value);
+    _applyFilters();
   }
 
   void changeFilter(MapFilterType filter) {
     state = state.copyWith(selectedFilter: filter);
-    _applyFilter(filter);
+    _applyFilters();
   }
+
+  void _applyFilters() {
+    Iterable<RentalLocation> result = _allLocations;
+
+    result = result.where((e) => e.type == state.selectedFilter);
+
+    if (state.searchKeyword.trim().isNotEmpty) {
+      final keyword = state.searchKeyword.trim().toLowerCase();
+
+      result = result.where((e) {
+        return e.name.toLowerCase().contains(keyword);
+      });
+    }
+
+    state = state.copyWith(
+      locations: result.toList(),
+    );
+  }
+
+
+  //LOCATION CHANGING
 
   void selectLocation(RentalLocation location) {
-    state = state.copyWith(selectedLocation: location, isShowDetailForMarker: true);
-  }
-
-  void _applyFilter(MapFilterType filter) {
-    final filtered = _allLocations.where((e) => e.type == filter).toList();
-    state = state.copyWith(locations: filtered);
+    state = state.copyWith(selectedLocation: location, isShowDetailForMarker: true, isShowDetailBottomModal: false);
   }
 
   void requestFocusUserLocation()
@@ -111,15 +155,25 @@ class MapProvider extends Notifier<MapState>{
     unselectedLocation();
   }
 
-  void toggleBottomModal()
-  {
-    state = state.copyWith(isShowDetailBottomModal: !state.isShowDetailBottomModal);
-  }
-
   void  unselectedLocation()
   {
     state = state.copyWith(isShowDetailForMarker: false);
   }
 
+
+  // MODAL - PANEL
+  void toggleBottomModal()
+  {
+    state = state.copyWith(isShowDetailBottomModal: !state.isShowDetailBottomModal);
+  }
+
+  void showBottomModal() {
+    if (state.isShowDetailBottomModal) return;
+    state = state.copyWith(isShowDetailBottomModal: true);
+  }
+  void hideBottomModal()
+  {
+    state = state.copyWith(isShowDetailBottomModal: false);
+  }
 
 }

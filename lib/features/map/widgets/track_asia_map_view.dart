@@ -16,6 +16,8 @@ class MapCanvasWidget extends StatefulWidget {
   final double? userLatitude;
   final double? userLongitude;
   final int focusUserLocationRequestId;
+  final VoidCallback unselectedLocation;
+  final ValueChanged<RentalLocation> setCurrentSelectedLocation;
 
   const MapCanvasWidget({
     super.key,
@@ -25,6 +27,8 @@ class MapCanvasWidget extends StatefulWidget {
     this.userLatitude,
     this.userLongitude,
     required this.focusUserLocationRequestId,
+    required this.unselectedLocation,
+    required this.setCurrentSelectedLocation,
   });
 
   @override
@@ -33,6 +37,10 @@ class MapCanvasWidget extends StatefulWidget {
 
 class _MapCanvasWidgetState extends State<MapCanvasWidget> {
   final Completer<TrackAsiaMapController> _mapController = Completer();
+  final Map<String, RentalLocation> _symbolLocationMap = {};
+  bool _symbolLayerConfigured = false;
+  bool _isRenderingSymbols = false;
+  bool _isProgrammaticMove = false;
 
   static const _initialPosition = CameraPosition(
     target: LatLng(10.7766, 106.7009),
@@ -69,6 +77,18 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
         widget.focusUserLocationRequestId) {
       _focusUserLocation();
     }
+  }
+
+  Future<void> _configureSymbolLayer() async {
+    if (_symbolLayerConfigured) return;
+
+    final controller = await _mapController.future;
+    await controller.setSymbolIconAllowOverlap(true);
+    await controller.setSymbolIconIgnorePlacement(true);
+    await controller.setSymbolTextAllowOverlap(true);
+    await controller.setSymbolTextIgnorePlacement(true);
+
+    _symbolLayerConfigured = true;
   }
 
   Future<Uint8List> _loadAssetBytes(String path) async {
@@ -118,43 +138,44 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
   }
 
   Future<void> _renderSymbols() async {
-    if (!_styleLoaded) return;
+    if (!_styleLoaded || _isRenderingSymbols) return;
 
-    final controller = await _mapController.future;
-    await _addMarkerImages();
-    await controller.clearSymbols();
+    _isRenderingSymbols = true;
+    try {
+      final controller = await _mapController.future;
 
-    //tracker always visible
-    controller.setSymbolIconAllowOverlap(true);
-    controller.setSymbolIconIgnorePlacement(true);
-    controller.setSymbolTextAllowOverlap(true);
-    controller.setSymbolTextIgnorePlacement(true);
+      await _addMarkerImages();
+      await _configureSymbolLayer();
+      await controller.clearSymbols();
 
-    for (final item in widget.locations) {
-      await controller.addSymbol(
-        SymbolOptions(
-          geometry: LatLng(item.latitude, item.longitude),
-          iconImage: _markerIconName(item.type),
-          iconSize: .5,
-          iconAnchor: 'bottom',
-          zIndex: 999,
-          textField: item.name,
-          textSize: 12,
-          textOffset: const Offset(0, 1.2),
-          textColor: '#052650',
-          textHaloColor: '#FFFFFF',
-          textHaloWidth: 1.5,
-        ),
-      );
+      _symbolLocationMap.clear();
+
+      for (final item in widget.locations) {
+        final symbol = await controller.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(item.latitude, item.longitude),
+            iconImage: _markerIconName(item.type),
+            iconSize: 0.5,
+            iconAnchor: 'bottom',
+            zIndex: 999,
+            textField: item.name,
+            textSize: 12,
+            textOffset: const Offset(0, 1.2),
+            textColor: '#052650',
+            textHaloColor: '#FFFFFF',
+            textHaloWidth: 1.5,
+          ),
+        );
+
+        _symbolLocationMap[symbol.id] = item;
+      }
+    } finally {
+      _isRenderingSymbols = false;
     }
   }
 
   Future<void> _focusUserLocation() async {
-    debugPrint(
-      'user lat: ${widget.userLatitude}, lng: ${widget.userLongitude}',
-    );
     if (widget.userLatitude == null || widget.userLongitude == null) return;
-
     final controller = await _mapController.future;
     await controller.animateCamera(
       CameraUpdate.newLatLngZoom(
@@ -165,10 +186,23 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
   }
 
   Future<void> _focusLocation(double lat, double lng) async {
+    _isProgrammaticMove = true;
     final controller = await _mapController.future;
     await controller.animateCamera(
       CameraUpdate.newLatLngZoom(LatLng(lat, lng), 16),
     );
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    _isProgrammaticMove = false;
+  }
+
+  Future<void> _onMarkerTap(RentalLocation tappedLocation) async {
+    widget.setCurrentSelectedLocation(tappedLocation);
+    await _focusLocation(
+      tappedLocation.latitude,
+      tappedLocation.longitude,
+    );
+    debugPrint('Show ${tappedLocation.name} detail');
   }
 
   @override
@@ -176,22 +210,34 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
     return TrackAsiaMap(
       styleString: widget.styleUrl,
       initialCameraPosition: _initialPosition,
+      myLocationEnabled: true,
+      myLocationTrackingMode: MyLocationTrackingMode.tracking,
+      myLocationRenderMode: MyLocationRenderMode.compass,
+      onCameraIdle: () async {
+        if (_isProgrammaticMove) return;
+        widget.unselectedLocation();
+      },
       onMapCreated: (controller) {
         if (!_mapController.isCompleted) {
           _mapController.complete(controller);
         }
+
+        controller.onSymbolTapped.add((symbol) {
+          final location = _symbolLocationMap[symbol.id];
+          if (location != null) {
+            _onMarkerTap(location);
+          }
+        });
       },
       onStyleLoadedCallback: () async {
         _styleLoaded = true;
+        _symbolLayerConfigured = false;
         await _renderSymbols();
         await _focusUserLocation();
       },
-      myLocationEnabled: true,
-      myLocationTrackingMode: MyLocationTrackingMode.tracking,
-      myLocationRenderMode: MyLocationRenderMode.compass,
-      compassEnabled: true,
-      zoomGesturesEnabled: true,
-      tiltGesturesEnabled: true,
+      onMapClick: (point, latLng) {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
     );
   }
 }

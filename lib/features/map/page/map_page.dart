@@ -8,6 +8,8 @@ import '../../../core/constants/enum.dart';
 import '../../../core/extensions/MapFilterType.dart';
 import '../../../core/theme/app_colors.dart';
 import '../provider/map_provider.dart';
+import '../widgets/map_filter_chips.dart';
+import '../widgets/map_search_bar.dart';
 import '../widgets/track_asia_map_view.dart';
 
 class MapPage extends ConsumerStatefulWidget {
@@ -29,8 +31,9 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   void _selectedLocation(RentalLocation location) {
     ref.read(mapProvider.notifier).selectLocation(location);
-    ref.read(mapProvider.notifier).toggleBottomModal();
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -38,157 +41,84 @@ class _MapPageState extends ConsumerState<MapPage> {
     final color = Theme.of(context).colorScheme;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
-        children: [
-          MapCanvasWidget(
-            styleUrl: MapConfig.styleUrl,
-            locations: state.locations,
-            userLatitude: state.userLatitude,
-            userLongitude: state.userLongitude,
-            selectedLocation: state.selectedLocation,
-            focusUserLocationRequestId: state.focusUserLocationRequestId,
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 54,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: color.surface,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: color.outline.withValues(alpha: 0.35),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.search, color: color.primary),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Tìm địa điểm, bãi đỗ xe...',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: color.onSurface.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        height: 54,
-                        width: 54,
-                        decoration: BoxDecoration(
-                          color: color.surface,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: color.outline.withValues(alpha: 0.35),
-                          ),
-                        ),
-                        child: Icon(Icons.tune, color: color.primary),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 44,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: MapFilterType.values.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final item = MapFilterType.values[index];
-                        final selected = item == state.selectedFilter;
-
-                        return ChoiceChip(
-                          label: Text(item.label),
-                          selected: selected,
-                          onSelected: (_) {
-                            ref.read(mapProvider.notifier).changeFilter(item);
-                          },
-                          backgroundColor: color.surface,
-                          selectedColor: color.surface,
-                          side: BorderSide(
-                            color: selected
-                                ? color.primary
-                                : color.outline.withValues(alpha: 0.4),
-                          ),
-                          labelStyle: TextStyle(
-                            color: color.primary,
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+          children: [
+            Positioned.fill(
+              child: MapCanvasWidget(
+                styleUrl: MapConfig.styleUrl,
+                locations: state.locations,
+                userLatitude: state.userLatitude,
+                userLongitude: state.userLongitude,
+                selectedLocation: state.selectedLocation,
+                focusUserLocationRequestId: state.focusUserLocationRequestId,
+                unselectedLocation: ref.read(mapProvider.notifier).unselectedLocation,
+                setCurrentSelectedLocation: ref.read(mapProvider.notifier).selectLocation,
               ),
             ),
-          ),
-          MapPannel(
-            isLoading: state.isLoading,
-            isShowDetailBottomModal: state.isShowDetailBottomModal,
-            locations: state.locations,
-            toggleBottomModal: () {
-              ref.read(mapProvider.notifier).toggleBottomModal();
-            },
-            selectedLocation: _selectedLocation,
-          ),
-          if (!state.isShowDetailBottomModal)
-            Positioned(
-              bottom: 20,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(mapProvider.notifier).toggleBottomModal();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.surface,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 12,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.keyboard_arrow_up),
-                          const SizedBox(width: 6),
-                          const Text('Gần bạn'),
-                        ],
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    MapSearchBar(
+                      searchInputChange: ref.read(mapProvider.notifier).updateSearchKeyword,
+                      showBottomModal: ref.read(mapProvider.notifier).showBottomModal,
+                    ),
+                    const SizedBox(height: 12),
+                    MapFilterChips(selectedFilter: state.selectedFilter, onChanged: ref.read(mapProvider.notifier).changeFilter)
+                  ],
+                ),
+              ),
+            ),
+            MapPanel(
+              isLoading: state.isLoading,
+              isShowDetailBottomModal: state.isShowDetailBottomModal,
+              locations: state.locations,
+              hideBottomModal: () {
+                ref.read(mapProvider.notifier).hideBottomModal();
+              },
+              selectedLocation: _selectedLocation,
+            ),
+            if (!state.isShowDetailBottomModal)
+              Positioned(
+                bottom: 20,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(mapProvider.notifier).toggleBottomModal();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.keyboard_arrow_up),
+                            const SizedBox(width: 6),
+                            const Text('Gần bạn'),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 10),
+                    SizedBox(width: 10),
                     if(state.isShowDetailForMarker)
                       GestureDetector(
                         onTap: () {
@@ -200,7 +130,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                             vertical: 10,
                           ),
                           decoration: BoxDecoration(
-                            color: color.surface,
+                            color: AppColors.surface,
                             borderRadius: BorderRadius.circular(999),
                             boxShadow: [
                               BoxShadow(
@@ -219,35 +149,35 @@ class _MapPageState extends ConsumerState<MapPage> {
                           ),
                         ),
                       ),
-                  SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(mapProvider.notifier).requestFocusUserLocation();
-                      ref.read(mapProvider.notifier).unselectedLocation();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+                    SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(mapProvider.notifier).requestFocusUserLocation();
+                        ref.read(mapProvider.notifier).unselectedLocation();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                        child: Icon(Icons.my_location, color: AppColors.primary),
                       ),
-                      decoration: BoxDecoration(
-                        color: color.surface,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 12,
-                          ),
-                        ],
-                      ),
-                      child: Icon(Icons.my_location, color: color.primary),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-        ],
-      ),
+          ],
+        ),
     );
   }
 }

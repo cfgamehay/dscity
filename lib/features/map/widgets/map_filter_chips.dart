@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/enum.dart';
 import '../../../core/extensions/MapFilterType.dart';
+import '../../../core/theme/app_colors.dart';
 
 class MapFilterChips extends StatelessWidget {
   final MapFilterType selectedFilter;
@@ -29,14 +30,19 @@ class MapFilterChips extends StatelessWidget {
           return ChoiceChip(
             label: Text(item.label),
             selected: selected,
-            onSelected: (_) => onChanged(item),
-            backgroundColor: color.surface,
-            selectedColor: color.surface,
+            onSelected: (_) {
+              if (selectedFilter == item) return;
+              onChanged(item);
+            },
+            backgroundColor: AppColors.surface,
+            selectedColor: AppColors.secondary.withValues(alpha: 0.12),
             side: BorderSide(
-              color: selected ? color.primary : color.outline.withValues(alpha: 0.4),
+              color: selected
+                  ? AppColors.primary
+                  : AppColors.outline.withValues(alpha: 0.4),
             ),
             labelStyle: TextStyle(
-              color: color.primary,
+              color: AppColors.primary,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
             shape: RoundedRectangleBorder(
