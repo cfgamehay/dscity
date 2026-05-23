@@ -139,15 +139,11 @@ class MockSharingRepository implements SharingRepository {
     Iterable<ShareTrip> result = _trips;
 
     if (pickupSuggestionId != null && pickupSuggestionId.isNotEmpty) {
-      result = result.where(
-        (item) => item.pickupId == pickupSuggestionId,
-      );
+      result = result.where((item) => item.pickupId == pickupSuggestionId);
     }
 
     if (dropoffSuggestionId != null && dropoffSuggestionId.isNotEmpty) {
-      result = result.where(
-        (item) => item.dropoffId == dropoffSuggestionId,
-      );
+      result = result.where((item) => item.dropoffId == dropoffSuggestionId);
     }
 
     final trips = result.toList();

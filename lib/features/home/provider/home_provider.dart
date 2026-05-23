@@ -21,6 +21,12 @@ class HomeNotifier extends Notifier<HomeState>
     state = state.copyWith(currentBannerIndex: index);
   }
 
+  void updateProfileName(String value) {
+    final nextName = value.trim();
+    if (nextName.isEmpty || nextName == state.userFullName) return;
+    state = state.copyWith(userFullName: nextName);
+  }
+
   Future<void> firstLoad() async {
     state = state.copyWith(isLoading: true, error: null);
 

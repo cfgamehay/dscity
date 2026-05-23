@@ -14,6 +14,9 @@ import '../widgets/parking_title_section.dart';
 
 
 class ParkingDetailContent extends StatelessWidget {
+  static const double _imageHeight = ParkingHeroImage.height;
+  static const double _contentTop = _imageHeight - 60;
+
   final ParkingDetail detail;
   final VoidCallback onBack;
   final VoidCallback onFavorite;
@@ -46,7 +49,7 @@ class ParkingDetailContent extends StatelessWidget {
           ),
         ),
         Positioned.fill(
-          top: 220,
+          top: _contentTop,
           child: Align(
             alignment: Alignment.topCenter,
             child: Container(

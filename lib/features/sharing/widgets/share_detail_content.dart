@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../data/models/sharing/share_detail.dart';
 import 'share_action_button.dart';
-import 'share_driver_card.dart';
 import 'share_detail_header.dart';
 import 'share_route_card.dart';
 import 'share_rule_chip_row.dart';
@@ -53,15 +52,6 @@ class ShareDetailContent extends StatelessWidget {
                       durationLabel: detail.durationLabel,
                       pricePerSeat: detail.pricePerSeat,
                       availableSeats: detail.availableSeats,
-                    ),
-                    const SizedBox(height: 16),
-                    ShareDriverCard(
-                      driverName: detail.driverName,
-                      driverRating: detail.driverRating,
-                      completedTrips: detail.completedTrips,
-                      vehicleName: detail.vehicleName,
-                      vehiclePlate: detail.vehiclePlate,
-                      vehicleColor: detail.vehicleColor,
                     ),
                     const SizedBox(height: 16),
                     ShareStopTimeline(stopPoints: detail.stopPoints),

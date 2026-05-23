@@ -1,0 +1,96 @@
+import '../../models/booking/booking_history_item.dart';
+import 'booking_repository.dart';
+
+class MockBookingRepository implements BookingRepository {
+  @override
+  Future<List<BookingHistoryItem>> getBookings() async {
+    await Future<void>.delayed(const Duration(milliseconds: 180));
+
+    return const [
+      BookingHistoryItem(
+        id: 'booking_1',
+        type: BookingType.parking,
+        status: BookingStatus.pending,
+        title: 'Bãi đậu xe Central Hub',
+        subtitle: 'Đặt chỗ bãi xe',
+        timeLabel: 'Hôm nay, 09:00 - 18:00',
+        locationLabel: 'Linh Trung, Thủ Đức',
+        totalPrice: 160000,
+        priceLabel: '160.000đ',
+        statusLabel: 'Chờ xác nhận',
+        actionLabel: 'Xem chi tiết',
+        note: 'Giữ chỗ cho ô tô 4 chỗ. Vào cổng A và quét mã đặt chỗ.',
+      ),
+      BookingHistoryItem(
+        id: 'booking_2',
+        type: BookingType.vehicle,
+        status: BookingStatus.confirmed,
+        title: 'Toyota Vios 2023',
+        subtitle: 'Thuê ô tô tự lái',
+        timeLabel: 'Đang thuê đến 21:00',
+        locationLabel: 'Kha Vạn Cân, Thủ Đức',
+        totalPrice: 720000,
+        priceLabel: '720.000đ',
+        statusLabel: 'Đã xác nhận',
+        actionLabel: 'Xem chi tiết',
+        note: 'Nhận xe tại bãi CityRide. Mang theo CCCD và giấy phép lái xe.',
+      ),
+      BookingHistoryItem(
+        id: 'booking_3',
+        type: BookingType.sharing,
+        status: BookingStatus.completed,
+        title: 'KTX khu A -> Vincom Thủ Đức',
+        subtitle: 'Chia sẻ phương tiện',
+        timeLabel: 'Hôm qua, 09:00',
+        locationLabel: 'Cổng KTX khu A',
+        totalPrice: 40000,
+        priceLabel: '40.000đ',
+        statusLabel: 'Hoàn thành',
+        actionLabel: 'Xem chi tiết',
+        note: 'Tài xế Minh Đức. Chuyến đi đúng giờ, đón tại cổng chính KTX.',
+      ),
+      BookingHistoryItem(
+        id: 'booking_4',
+        type: BookingType.parking,
+        status: BookingStatus.completed,
+        title: 'Bãi đậu xe Skyline',
+        subtitle: 'Đặt chỗ bãi xe',
+        timeLabel: '20/05/2026, 08:30 - 17:00',
+        locationLabel: 'Bình Thọ, Thủ Đức',
+        totalPrice: 175000,
+        priceLabel: '175.000đ',
+        statusLabel: 'Hoàn thành',
+        actionLabel: 'Xem chi tiết',
+        note: 'Bãi ngoài trời, có mái che khu B. Thanh toán tại quầy khi ra.',
+      ),
+      BookingHistoryItem(
+        id: 'booking_5',
+        type: BookingType.vehicle,
+        status: BookingStatus.canceled,
+        title: 'Honda Vision 2024',
+        subtitle: 'Thuê xe máy',
+        timeLabel: '18/05/2026, 07:00',
+        locationLabel: 'ĐHQG, Thủ Đức',
+        totalPrice: 120000,
+        priceLabel: '120.000đ',
+        statusLabel: 'Đã hủy',
+        actionLabel: 'Xem chi tiết',
+        note: 'Đơn hủy trước giờ nhận xe 2 tiếng. Không phát sinh phí hủy.',
+      ),
+      BookingHistoryItem(
+        id: 'booking_6',
+        type: BookingType.sharing,
+        status: BookingStatus.saved,
+        title: 'ĐHQG -> Suối Tiên',
+        subtitle: 'Chuyến đã lưu',
+        timeLabel: 'Ngày mai, 10:30',
+        locationLabel: 'Cổng ĐHQG khu A',
+        totalPrice: 50000,
+        priceLabel: '50.000đ',
+        statusLabel: 'Đã lưu',
+        actionLabel: 'Xem chi tiết',
+        note: 'Bạn đã lưu chuyến này để xem lại sau. Còn 1 chỗ trống.',
+      ),
+    ];
+  }
+}

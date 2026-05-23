@@ -1,17 +1,19 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:characters/characters.dart';
 import 'package:dscity_mobile_app/core/assets/assets.dart';
 import 'package:dscity_mobile_app/core/theme/app_text_styles.dart';
 import 'package:dscity_mobile_app/core/widgets/base_card.dart';
 import 'package:dscity_mobile_app/core/widgets/button/primary_button.dart';
 import 'package:dscity_mobile_app/features/home/provider/home_provider.dart';
 import 'package:dscity_mobile_app/features/home/widgets/home_banner_slider.dart';
+import 'package:dscity_mobile_app/features/notification/page/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/enum.dart';
 import '../../../core/extensions/currency_format.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/button/icon_button.dart';
-import '../../../core/constants/enum.dart';
 import '../../parking/page/parking_page.dart';
 import '../../sharing/page/sharing_page.dart';
 import '../../vehicle/page/vehicle_listing_page.dart';
@@ -19,13 +21,11 @@ import '../../vehicle/page/vehicle_listing_page.dart';
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
-
   @override
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-
   @override
   void initState() {
     super.initState();
@@ -37,10 +37,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeProvider);
-    bool _didPrecacheBanners = false;
+    bool didPrecacheBanners = false;
 
-    if (!_didPrecacheBanners && state.banners.isNotEmpty) {
-      _didPrecacheBanners = true;
+    if (!didPrecacheBanners && state.banners.isNotEmpty) {
+      didPrecacheBanners = true;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         for (final banner in state.banners) {
@@ -53,7 +53,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     if (state.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return RefreshIndicator(
@@ -69,7 +71,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: Image.asset(ImagesResource.pngLogiTextOnly),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationPage(showAppBar: true,),
+                    ),
+                  );
+                },
                 icon: const Icon(Icons.notifications_none_outlined),
               ),
             ],
@@ -77,7 +85,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           const SizedBox(height: 20),
           Row(
             children: [
-              const CircleAvatar(radius: 22),
+              _HomeAvatar(name: state.userFullName),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -101,7 +109,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           const SizedBox(height: 20),
           BaseCard(
             backgroundColor: AppColors.background,
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Expanded(
@@ -125,8 +133,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
                 PrimaryButton(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  onPressed: (){},
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  onPressed: () {},
                   child: Text(
                     'Nạp tiền',
                     style: AppTextStyles.titleMedium.copyWith(
@@ -137,7 +145,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ],
             ),
           ),
-          SizedBox(height: 20,),
+          const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -222,9 +230,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -238,20 +244,74 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: Text(
                   'Xem tất cả',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.grey500
+                    color: AppColors.grey500,
                   ),
                 ),
-              )
+              ),
             ],
           ),
-
           const SizedBox(height: 20),
-
-          HomeBannerSlider(banners: state.banners, currentIndex: state.currentBannerIndex, onPageChanged: (int index){
-            ref.read(homeProvider.notifier).changeBanner(index);
-          })
+          HomeBannerSlider(
+            banners: state.banners,
+            currentIndex: state.currentBannerIndex,
+            onPageChanged: (int index) {
+              ref.read(homeProvider.notifier).changeBanner(index);
+            },
+          ),
         ],
       ),
     );
+  }
+}
+
+class _HomeAvatar extends StatelessWidget {
+  final String name;
+
+  const _HomeAvatar({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final displayName = name.trim().isEmpty ? 'Người dùng' : name.trim();
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0B8F62), Color(0xFF124B9A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        _initials(displayName),
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: AppColors.onPrimary,
+        ),
+      ),
+    );
+  }
+
+  String _initials(String value) {
+    final parts = value
+        .split(RegExp(r'\s+'))
+        .where((item) => item.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first.characters.first.toUpperCase();
+    return '${parts.first.characters.first}${parts.last.characters.first}'
+        .toUpperCase();
   }
 }

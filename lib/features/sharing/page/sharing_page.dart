@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/custom_textfield.dart';
 import '../../../data/models/sharing/place_suggestion.dart';
+import '../../../data/models/sharing/share_rule.dart';
 import '../provider/sharing_search_provider.dart';
 import '../provider/sharing_search_state.dart';
 import '../widgets/sharing_tab_switch.dart';
@@ -28,6 +29,12 @@ class SharingPage extends ConsumerStatefulWidget {
 }
 
 class _SharingPageState extends ConsumerState<SharingPage> {
+  static const List<ShareRule> _availableRules = [
+    ShareRule(label: 'Không hút thuốc', iconKey: 'nosmoke'),
+    ShareRule(label: 'Không thú cưng', iconKey: 'nopet'),
+    ShareRule(label: 'Ưu tiên đúng giờ', iconKey: 'time'),
+  ];
+
   final _sharePickupController = TextEditingController();
   final _shareDropoffController = TextEditingController();
   final _sharePriceController = TextEditingController();
@@ -70,6 +77,22 @@ class _SharingPageState extends ConsumerState<SharingPage> {
     _sharePriceController.dispose();
     _shareNoteController.dispose();
     super.dispose();
+  }
+
+  void _syncControllers(SharingSearchState state) {
+    _syncController(_sharePickupController, state.sharePickupText);
+    _syncController(_shareDropoffController, state.shareDropoffText);
+    _syncController(_sharePriceController, state.sharePriceText);
+    _syncController(_shareNoteController, state.shareNote);
+  }
+
+  void _syncController(TextEditingController controller, String value) {
+    if (controller.text == value) return;
+    controller.value = controller.value.copyWith(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+      composing: TextRange.empty,
+    );
   }
 
   Future<void> _pickPlace(_PlaceTarget target) async {
@@ -159,10 +182,6 @@ class _SharingPageState extends ConsumerState<SharingPage> {
     if (!mounted) return;
 
     if (success) {
-      _sharePickupController.clear();
-      _shareDropoffController.clear();
-      _sharePriceController.clear();
-      _shareNoteController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Đã đăng chuyến chia sẻ xe.')),
       );
@@ -180,10 +199,14 @@ class _SharingPageState extends ConsumerState<SharingPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(sharingSearchProvider);
     final notifier = ref.read(sharingSearchProvider.notifier);
+    _syncControllers(state);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: AppColors.background,
+        scrolledUnderElevation: 0,
         title: const Text('Chia sẻ phương tiện'),
       ),
       body: Padding(
@@ -385,12 +408,24 @@ class _SharingPageState extends ConsumerState<SharingPage> {
                       ),
                       const SizedBox(height: 12),
                       _InputCard(
+                        label: 'Nội quy',
+                        child: _ShareRuleSelector(
+                          rules: _availableRules,
+                          selectedRules: state.selectedRules,
+                          onToggle: ref
+                              .read(sharingSearchProvider.notifier)
+                              .toggleShareRule,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _InputCard(
                         label: 'Ghi chú',
                         child: CustomTextField(
                           controller: _shareNoteController,
                           maxLines: 4,
                           minLines: 4,
-                          hintText: 'Thêm ghi chú cho hành khách...',
+                          hintText:
+                              'Thêm thông tin xe, biển số, điểm đón hoặc lưu ý cho hành khách...',
                           contentPadding: EdgeInsets.zero,
                           focusedBorderColor: Colors.transparent,
                           enabledBorderColor: Colors.transparent,
@@ -626,6 +661,84 @@ class _InputCard extends StatelessWidget {
   }
 }
 
+class _ShareRuleSelector extends StatelessWidget {
+  final List<ShareRule> rules;
+  final List<ShareRule> selectedRules;
+  final ValueChanged<ShareRule> onToggle;
+
+  const _ShareRuleSelector({
+    required this.rules,
+    required this.selectedRules,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: rules.map((rule) {
+        final selected =
+            selectedRules.any((item) => item.label == rule.label);
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: () => onToggle(rule),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.secondary.withValues(alpha: 0.12)
+                  : AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: selected
+                    ? AppColors.secondary
+                    : AppColors.outlineVariant,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _iconFor(rule.iconKey),
+                  size: 16,
+                  color:
+                      selected ? AppColors.secondary : AppColors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  rule.label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? AppColors.secondary
+                        : AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  IconData _iconFor(String iconKey) {
+    switch (iconKey) {
+      case 'nosmoke':
+        return Icons.smoke_free_outlined;
+      case 'nopet':
+        return Icons.pets_outlined;
+      case 'time':
+        return Icons.access_time_outlined;
+      default:
+        return Icons.check_circle_outline;
+    }
+  }
+}
+
 class _SeatButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -752,7 +865,9 @@ class _PlacePickerSheetState extends ConsumerState<_PlacePickerSheet> {
     final state = ref.watch(sharingSearchProvider);
     final suggestions = _mode == _PlacePickerMode.suggestion
         ? widget.defaultSuggestionsBuilder(state)
-        : (_query.trim().isEmpty ? const <PlaceSuggestion>[] : state.placeResults);
+        : (_query.trim().isEmpty
+              ? const <PlaceSuggestion>[]
+              : state.placeResults);
 
     return SafeArea(
       child: Container(

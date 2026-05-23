@@ -1,4 +1,5 @@
 import '../../../data/models/sharing/place_suggestion.dart';
+import '../../../data/models/sharing/share_rule.dart';
 import '../../../data/models/sharing/share_trip.dart';
 
 enum SharingTab {
@@ -28,6 +29,7 @@ class SharingSearchState {
   final int shareSeats;
   final String sharePriceText;
   final String shareNote;
+  final List<ShareRule> selectedRules;
   final List<PlaceSuggestion> popularPlaces;
   final List<PlaceSuggestion> recentPlaces;
   final List<PlaceSuggestion> suggestedDestinations;
@@ -50,6 +52,7 @@ class SharingSearchState {
     this.shareSeats = 2,
     this.sharePriceText = '',
     this.shareNote = '',
+    this.selectedRules = const [],
     this.popularPlaces = const [],
     this.recentPlaces = const [],
     this.suggestedDestinations = const [],
@@ -83,6 +86,7 @@ class SharingSearchState {
     int? shareSeats,
     String? sharePriceText,
     String? shareNote,
+    List<ShareRule>? selectedRules,
     List<PlaceSuggestion>? popularPlaces,
     List<PlaceSuggestion>? recentPlaces,
     List<PlaceSuggestion>? suggestedDestinations,
@@ -107,6 +111,7 @@ class SharingSearchState {
       shareSeats: shareSeats ?? this.shareSeats,
       sharePriceText: sharePriceText ?? this.sharePriceText,
       shareNote: shareNote ?? this.shareNote,
+      selectedRules: selectedRules ?? this.selectedRules,
       popularPlaces: popularPlaces ?? this.popularPlaces,
       recentPlaces: recentPlaces ?? this.recentPlaces,
       suggestedDestinations:

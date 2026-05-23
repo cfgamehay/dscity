@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/sharing/place_suggestion.dart';
+import '../../../data/models/sharing/share_rule.dart';
 import '../../../data/models/sharing/share_trip.dart';
 import '../../../data/repositories/sharing/mock_sharing_repository.dart';
 import '../../../data/repositories/sharing/sharing_repository.dart';
@@ -54,13 +55,14 @@ class SharingSearchProvider extends Notifier<SharingSearchState> {
   }
 
   void changeTab(SharingTab tab) {
-    state = state.copyWith(activeTab: tab);
+    state = state.copyWith(activeTab: tab, error: null);
   }
 
   void updatePickupPlace(PlaceSuggestion place) {
     state = state.copyWith(
       pickupPlace: place,
       placeResults: const [],
+      error: null,
     );
     unawaited(_refreshSuggestedDestinations());
   }
@@ -69,40 +71,54 @@ class SharingSearchProvider extends Notifier<SharingSearchState> {
     state = state.copyWith(
       dropoffPlace: place,
       placeResults: const [],
+      error: null,
     );
   }
 
   void updateSharePickupText(String value) {
-    state = state.copyWith(sharePickupText: value);
+    state = state.copyWith(sharePickupText: value, error: null);
   }
 
   void updateShareDropoffText(String value) {
-    state = state.copyWith(shareDropoffText: value);
+    state = state.copyWith(shareDropoffText: value, error: null);
   }
 
   void updateSelectedTime(DateTime time) {
-    state = state.copyWith(selectedTime: time);
+    state = state.copyWith(selectedTime: time, error: null);
   }
 
   void updateShareTime(DateTime time) {
-    state = state.copyWith(shareTime: time);
+    state = state.copyWith(shareTime: time, error: null);
   }
 
   void increaseShareSeats() {
-    state = state.copyWith(shareSeats: state.shareSeats + 1);
+    state = state.copyWith(shareSeats: state.shareSeats + 1, error: null);
   }
 
   void decreaseShareSeats() {
     if (state.shareSeats <= 1) return;
-    state = state.copyWith(shareSeats: state.shareSeats - 1);
+    state = state.copyWith(shareSeats: state.shareSeats - 1, error: null);
   }
 
   void updateSharePriceText(String value) {
-    state = state.copyWith(sharePriceText: value);
+    state = state.copyWith(sharePriceText: value, error: null);
   }
 
   void updateShareNote(String value) {
-    state = state.copyWith(shareNote: value);
+    state = state.copyWith(shareNote: value, error: null);
+  }
+
+  void toggleShareRule(ShareRule rule) {
+    final selected = List<ShareRule>.from(state.selectedRules);
+    final existingIndex = selected.indexWhere((item) => item.label == rule.label);
+
+    if (existingIndex >= 0) {
+      selected.removeAt(existingIndex);
+    } else {
+      selected.add(rule);
+    }
+
+    state = state.copyWith(selectedRules: selected, error: null);
   }
 
   void clearPlaceSearch() {
@@ -170,6 +186,7 @@ class SharingSearchProvider extends Notifier<SharingSearchState> {
     final pickup = state.sharePickupText.trim();
     final dropoff = state.shareDropoffText.trim();
     final seats = state.shareSeats;
+    final ruleText = state.selectedRules.map((item) => item.label).join(', ');
     final price = int.tryParse(
           state.sharePriceText.replaceAll(RegExp(r'[^0-9]'), ''),
         ) ??
@@ -191,7 +208,10 @@ class SharingSearchProvider extends Notifier<SharingSearchState> {
         departureTime: state.shareTime,
         availableSeats: seats,
         pricePerSeat: price,
-        note: state.shareNote,
+        note: _composeShareNote(
+          note: state.shareNote.trim(),
+          ruleText: ruleText,
+        ),
       );
 
       _allTrips = await _repository.searchTrips();
@@ -203,6 +223,7 @@ class SharingSearchProvider extends Notifier<SharingSearchState> {
         shareSeats: 2,
         sharePriceText: '',
         shareNote: '',
+        selectedRules: const [],
       );
       _applyTripFilter();
       return true;
@@ -233,5 +254,20 @@ class SharingSearchProvider extends Notifier<SharingSearchState> {
     }
 
     state = state.copyWith(trips: list);
+  }
+
+  String _composeShareNote({
+    required String note,
+    required String ruleText,
+  }) {
+    if (ruleText.isEmpty) {
+      return note;
+    }
+
+    if (note.isEmpty) {
+      return 'Nội quy: $ruleText';
+    }
+
+    return '$note\n\nNội quy: $ruleText';
   }
 }

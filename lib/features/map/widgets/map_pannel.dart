@@ -111,11 +111,7 @@ class MapPanel extends StatelessWidget {
                                                 backgroundColor:
                                                     AppColors.primary,
                                                 child: Icon(
-                                                  item.type ==
-                                                          MapFilterType
-                                                              .motorbike
-                                                      ? Icons.two_wheeler
-                                                      : Icons.local_parking,
+                                                  _iconFor(item.type),
                                                   color: AppColors.onPrimary,
                                                 ),
                                               ),
@@ -179,5 +175,18 @@ class MapPanel extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  IconData _iconFor(MapFilterType type) {
+    switch (type) {
+      case MapFilterType.parking:
+        return Icons.local_parking;
+      case MapFilterType.car:
+        return Icons.directions_car;
+      case MapFilterType.motorbike:
+        return Icons.two_wheeler;
+      case MapFilterType.sharing:
+        return Icons.route_outlined;
+    }
   }
 }
