@@ -11,6 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/extensions/currency_format.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/button/icon_button.dart';
+import '../../../core/constants/enum.dart';
+import '../../parking/page/parking_page.dart';
+import '../../sharing/page/sharing_page.dart';
+import '../../vehicle/page/vehicle_listing_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -139,7 +143,13 @@ class _HomePageState extends ConsumerState<HomePage> {
             children: [
               Expanded(
                 child: AppIconButton(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ParkingPage(),
+                      ),
+                    );
+                  },
                   size: 64,
                   iconSize: 28,
                   isCircle: false,
@@ -152,7 +162,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               const SizedBox(width: 8),
               Expanded(
                 child: AppIconButton(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const VehiclePage(
+                          type: MapFilterType.car,
+                        ),
+                      ),
+                    );
+                  },
                   size: 64,
                   iconSize: 28,
                   isCircle: false,
@@ -165,7 +183,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               const SizedBox(width: 8),
               Expanded(
                 child: AppIconButton(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const VehiclePage(
+                          type: MapFilterType.motorbike,
+                        ),
+                      ),
+                    );
+                  },
                   size: 64,
                   iconSize: 28,
                   isCircle: false,
@@ -178,7 +204,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               const SizedBox(width: 8),
               Expanded(
                 child: AppIconButton(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SharingPage(),
+                      ),
+                    );
+                  },
                   size: 64,
                   iconSize: 28,
                   isCircle: false,

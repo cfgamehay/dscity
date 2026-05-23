@@ -1,23 +1,19 @@
-import '../../../core/constants/enum.dart';
-
-class RentalLocation {
+class ParkingItem {
   final String id;
   final String name;
-  final double latitude;
-  final double longitude;
-  final MapFilterType type;
   final String distanceText;
   final String statusText;
   final String priceText;
+  final double latitude;
+  final double longitude;
 
-  const RentalLocation({
+  const ParkingItem({
     required this.id,
     required this.name,
-    required this.latitude,
-    required this.longitude,
-    required this.type,
     required this.distanceText,
     required this.statusText,
     required this.priceText,
+    required this.latitude,
+    required this.longitude,
   });
 }

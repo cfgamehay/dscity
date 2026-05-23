@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider_plus/carousel_slider_plus.dart';
 import 'package:dscity_mobile_app/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../model/home_banner_model.dart';
+import '../../../data/models/home/home_banner_model.dart';
 
 class HomeBannerSlider extends StatelessWidget {
   final List<HomeBannerModel> banners;

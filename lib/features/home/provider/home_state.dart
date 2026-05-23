@@ -1,4 +1,4 @@
-import 'package:dscity_mobile_app/features/home/model/home_banner_model.dart';
+import 'package:dscity_mobile_app/data/models/home/home_banner_model.dart';
 
 class HomeState {
   final bool isRefreshing;

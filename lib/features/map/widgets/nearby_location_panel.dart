@@ -1,7 +1,6 @@
 import 'package:dscity_mobile_app/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-
-import '../../../data/model/map/rental_location.dart';
+import '../../../data/models/map/rental_location.dart';
 import 'nearby_location_card.dart';
 
 class NearbyLocationsPanel extends StatelessWidget {
@@ -25,7 +24,7 @@ class NearbyLocationsPanel extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -53,7 +52,7 @@ class NearbyLocationsPanel extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ...locations.map(
-                (item) => Padding(
+            (item) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: NearbyLocationCard(
                 location: item,

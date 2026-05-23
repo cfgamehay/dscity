@@ -52,7 +52,7 @@
 //         : Platform.localeName;
 //   }
 //
-//   /// Getting device detail
+//   /// Getting device vehicle
 //   ///
 //   /// [0] - device Id
 //   ///
@@ -63,7 +63,7 @@
 //   /// [3] - OS name (Android/iOS)
 //   static Future<List<String>> getDeviceDetails() async {
 //     String identifier = '-1 (Not Android or iOS device)';
-//     String deviceName = 'Unknown model (Not Android or iOS device)';
+//     String deviceName = 'Unknown models (Not Android or iOS device)';
 //     String deviceVersion = 'Unknown version (Not Android or iOS device)';
 //     String os = 'Unknown';
 //     final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
@@ -72,7 +72,7 @@
 //       if (Platform.isAndroid) {
 //         AndroidDeviceInfo build = await deviceInfoPlugin.androidInfo;
 //         identifier = build.id; //UUID for Android
-//         deviceName = build.model;
+//         deviceName = build.models;
 //         deviceVersion = build.version.release;
 //         os = 'android';
 //       } else if (Platform.isIOS) {

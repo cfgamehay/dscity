@@ -41,9 +41,7 @@ class _MainAppState extends ConsumerState<MainApp> {
         builder: (context, child) {
           return ScrollConfiguration(behavior: MyBehavior(), child: child!);
         },
-        theme: ThemeData(
-          fontFamily: 'Roboto',
-        ),
+        theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         title: AppConfig.shared.appName,
         locale: const Locale('vi'),
@@ -54,7 +52,7 @@ class _MainAppState extends ConsumerState<MainApp> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.background,
                 body: Center(child: CircularProgressIndicator.adaptive()),
               );
             }

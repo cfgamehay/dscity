@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/enum.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../data/model/map/rental_location.dart';
+import '../../../data/models/map/rental_location.dart';
 
 class MapPanel extends StatelessWidget {
   final bool isLoading;
@@ -23,6 +23,7 @@ class MapPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
+    final shouldShowLoading = isLoading && locations.isEmpty;
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -48,7 +49,7 @@ class MapPanel extends StatelessWidget {
                 ),
               ],
             ),
-            child: isLoading
+            child: shouldShowLoading
                 ? const Center(child: CircularProgressIndicator())
                 : Column(
                     children: [
@@ -136,7 +137,7 @@ class MapPanel extends StatelessWidget {
                                                     ),
                                                     const SizedBox(height: 4),
                                                     Text(
-                                                      '${item.distanceText} • ${item.statusText}',
+                                                      '${item.displayDistanceText} - ${item.statusText}',
                                                       style: TextStyle(
                                                         fontSize: 14,
                                                         color: Colors

@@ -1,116 +1,126 @@
 import 'package:dscity_mobile_app/features/map/provider/map_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+
 import '../../../core/constants/enum.dart';
 import '../../../core/services/location_services.dart';
-import '../../../data/model/map/rental_location.dart';
+import '../../../data/models/map/rental_location.dart';
+import '../../../data/repositories/map/mock_rental_location_repository.dart';
+import '../../../data/repositories/map/rental_location_repository.dart';
 
 final mapProvider = NotifierProvider<MapProvider, MapState>(
-  MapProvider.new
+  MapProvider.new,
 );
 
-class MapProvider extends Notifier<MapState>{
-  static const _allLocations = <RentalLocation>[
-    RentalLocation(
-      id: '1',
-      name: 'Bãi đậu xe Central Hub',
-      latitude: 10.939100,
-      longitude: 106.879400,
-      type: MapFilterType.parking,
-      distanceText: '120m',
-      statusText: 'Còn chỗ',
-      priceText: '20.000/giờ',
-    ),
-    RentalLocation(
-      id: '2',
-      name: 'Thuê xe máy B',
-      latitude: 10.937800,
-      longitude: 106.878200,
-      type: MapFilterType.motorbike,
-      distanceText: '180m',
-      statusText: 'Còn chỗ',
-      priceText: '15.000/giờ',
-    ),
-    RentalLocation(
-      id: '99',
-      name: 'Bãi đậu xe Skyline',
-      latitude: 10.938900,
-      longitude: 106.877700,
-      type: MapFilterType.parking,
-      distanceText: '250m',
-      statusText: 'Còn chỗ',
-      priceText: '25.000/giờ',
-    ),
-    RentalLocation(
-      id: '98',
-      name: 'Bãi đậu xe Skyline',
-      latitude: 10.938900,
-      longitude: 106.877700,
-      type: MapFilterType.parking,
-      distanceText: '250m',
-      statusText: 'Còn chỗ',
-      priceText: '25.000/giờ',
-    ),
-    RentalLocation(
-      id: '97',
-      name: 'Bãi đậu xe Skyline',
-      latitude: 10.938900,
-      longitude: 106.877700,
-      type: MapFilterType.parking,
-      distanceText: '250m',
-      statusText: 'Còn chỗ',
-      priceText: '25.000/giờ',
-    ),
-    RentalLocation(
-      id: '4',
-      name: 'Thuê ô tô A',
-      latitude: 10.940000,
-      longitude: 106.879100,
-      type: MapFilterType.car,
-      distanceText: '300m',
-      statusText: 'Còn xe',
-      priceText: '120.000/giờ',
-    ),
-    RentalLocation(
-      id: '5',
-      name: 'Điểm chia sẻ phương tiện',
-      latitude: 10.937300,
-      longitude: 106.879500,
-      type: MapFilterType.sharing,
-      distanceText: '350m',
-      statusText: 'Khả dụng',
-      priceText: 'Miễn phí',
-    ),
-  ];
+class MapProvider extends Notifier<MapState> {
+  late final RentalLocationRepository _repository;
+  List<RentalLocation> _allLocations = const [];
+  bool _hasLoadedOnce = false;
+
   @override
   MapState build() {
+    _repository = MockRentalLocationRepository();
     return const MapState();
   }
-//LOADING
 
   Future<void> _loadUserLocation() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
+      state = state.copyWith(
+        isLocationServiceEnabled: false,
+        hasLocationPermission: false,
+        userLatitude: null,
+        userLongitude: null,
+      );
+      return;
+    }
+
     final position = await LocationService.getCurrentPosition();
 
     if (position == null) {
-      state = state.copyWith(hasLocationPermission: false);
+      state = state.copyWith(
+        isLocationServiceEnabled: true,
+        hasLocationPermission: false,
+        userLatitude: null,
+        userLongitude: null,
+      );
       return;
     }
 
     state = state.copyWith(
+      isLocationServiceEnabled: true,
       hasLocationPermission: true,
       userLatitude: position.latitude,
       userLongitude: position.longitude,
     );
   }
 
-  Future<void> firstLoad() async {
-    state = state.copyWith(isLoading: true);
-    await _loadUserLocation();
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    _applyFilters();
-    state = state.copyWith(isLoading: false);
+  List<RentalLocation> _attachDistance(
+      List<RentalLocation> items,
+      double? userLatitude,
+      double? userLongitude,
+      ) {
+    if (userLatitude == null || userLongitude == null) {
+      return items;
+    }
+
+    return items.map((item) {
+      final distance = Geolocator.distanceBetween(
+        userLatitude,
+        userLongitude,
+        item.latitude,
+        item.longitude,
+      );
+
+      return item.copyWith(
+        distanceInMeters: distance,
+      );
+    }).toList();
   }
 
-  //FILTER
+  Future<void> _loadLocations() async {
+    final items = await _repository.getLocations();
+
+    _allLocations = _attachDistance(
+      items,
+      state.userLatitude,
+      state.userLongitude,
+    );
+  }
+
+  Future<void> firstLoad({bool forceRefresh = false}) async {
+    if (_hasLoadedOnce && !forceRefresh) {
+      _applyFilters();
+      return;
+    }
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+    );
+
+    try {
+      await _loadUserLocation();
+      await _loadLocations();
+      _applyFilters();
+      _hasLoadedOnce = true;
+
+      state = state.copyWith(
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> openLocationById(String locationId) async {
+    await firstLoad();
+    selectLocationById(locationId);
+  }
 
   void updateSearchKeyword(String value) {
     state = state.copyWith(searchKeyword: value);
@@ -122,58 +132,140 @@ class MapProvider extends Notifier<MapState>{
     _applyFilters();
   }
 
+  void changeProvince(String province) {
+    state = state.copyWith(selectedProvince: province);
+    _applyFilters();
+  }
+
+  void changeSort(MapSortType sortType) {
+    state = state.copyWith(selectedSort: sortType);
+    _applyFilters();
+  }
+
+  void clearProvinceFilter() {
+    if (state.selectedProvince.isEmpty) return;
+    state = state.copyWith(selectedProvince: '');
+    _applyFilters();
+  }
+
+  void resetFilters() {
+    state = state.copyWith(
+      selectedProvince: '',
+      selectedSort: MapSortType.nearest,
+    );
+    _applyFilters();
+  }
+
   void _applyFilters() {
     Iterable<RentalLocation> result = _allLocations;
 
     result = result.where((e) => e.type == state.selectedFilter);
 
-    if (state.searchKeyword.trim().isNotEmpty) {
-      final keyword = state.searchKeyword.trim().toLowerCase();
-
-      result = result.where((e) {
-        return e.name.toLowerCase().contains(keyword);
-      });
+    if (state.selectedProvince.trim().isNotEmpty) {
+      result = result.where((e) => e.province == state.selectedProvince);
     }
 
+    if (state.searchKeyword.trim().isNotEmpty) {
+      final keyword = state.searchKeyword.trim();
+      result = result.where((e) => e.matchesKeyword(keyword));
+    }
+
+    final list = result.toList();
+
+    switch (state.selectedSort) {
+      case MapSortType.nearest:
+        if (_canSortByDistance) {
+          list.sort(
+            (a, b) => (a.distanceInMeters ?? double.infinity).compareTo(
+              b.distanceInMeters ?? double.infinity,
+            ),
+          );
+        }
+        break;
+      case MapSortType.cheapest:
+        list.sort((a, b) => a.priceValue.compareTo(b.priceValue));
+        break;
+    }
+
+    state = state.copyWith(locations: list);
+  }
+
+  void selectLocation(RentalLocation location) {
     state = state.copyWith(
-      locations: result.toList(),
+      selectedLocation: location,
+      selectedLocationRequestId: state.selectedLocationRequestId + 1,
+      isShowDetailForMarker: true,
+      isShowDetailBottomModal: false,
     );
   }
 
+  void selectLocationById(String locationId) {
+    RentalLocation? found;
 
-  //LOCATION CHANGING
+    try {
+      found = _allLocations.firstWhere((item) => item.id == locationId);
+    } catch (_) {
+      found = null;
+    }
 
-  void selectLocation(RentalLocation location) {
-    state = state.copyWith(selectedLocation: location, isShowDetailForMarker: true, isShowDetailBottomModal: false);
+    if (found == null) return;
+
+    state = state.copyWith(
+      selectedFilter: found.type,
+      searchKeyword: '',
+      selectedProvince: '',
+    );
+
+    _applyFilters();
+
+    state = state.copyWith(
+      selectedLocation: found,
+      selectedLocationRequestId: state.selectedLocationRequestId + 1,
+      isShowDetailForMarker: true,
+      isShowDetailBottomModal: false,
+    );
   }
 
-  void requestFocusUserLocation()
-  {
+  void requestFocusUserLocation() {
     state = state.copyWith(
       focusUserLocationRequestId: state.focusUserLocationRequestId + 1,
     );
     unselectedLocation();
   }
 
-  void  unselectedLocation()
-  {
+  void unselectedLocation() {
     state = state.copyWith(isShowDetailForMarker: false);
   }
 
-
-  // MODAL - PANEL
-  void toggleBottomModal()
-  {
-    state = state.copyWith(isShowDetailBottomModal: !state.isShowDetailBottomModal);
+  void toggleBottomModal() {
+    state = state.copyWith(
+      isShowDetailBottomModal: !state.isShowDetailBottomModal,
+    );
   }
 
   void showBottomModal() {
     if (state.isShowDetailBottomModal) return;
     state = state.copyWith(isShowDetailBottomModal: true);
   }
-  void hideBottomModal()
-  {
+
+  void hideBottomModal() {
     state = state.copyWith(isShowDetailBottomModal: false);
   }
 
+  List<String> getAvailableProvinces() {
+    final provinces = _allLocations
+        .map((e) => e.province)
+        .toSet()
+        .toList()
+      ..sort();
+
+    return [''] + provinces;
+  }
+
+  bool get _canSortByDistance {
+    return state.isLocationServiceEnabled &&
+        state.hasLocationPermission &&
+        state.userLatitude != null &&
+        state.userLongitude != null;
+  }
 }

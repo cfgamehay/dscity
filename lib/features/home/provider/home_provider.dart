@@ -2,7 +2,7 @@
 import 'package:dscity_mobile_app/features/home/provider/home_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../model/home_banner_model.dart';
+import '../../../data/models/home/home_banner_model.dart';
 
 final homeProvider = NotifierProvider<HomeNotifier, HomeState>(
   HomeNotifier.new

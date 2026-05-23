@@ -1,18 +1,23 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dscity_mobile_app/core/assets/assets.dart';
+import 'package:dscity_mobile_app/features/parking/page/parking_detail_page.dart';
+import 'package:dscity_mobile_app/features/sharing/page/share_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trackasia_gl/trackasia_gl.dart';
 
 import '../../../../core/constants/enum.dart';
-import '../../../../data/model/map/rental_location.dart';
+import '../../../data/models/map/rental_location.dart';
+import '../../vehicle/page/vehicle_detail_page.dart';
 
 class MapCanvasWidget extends StatefulWidget {
   final String styleUrl;
   final List<RentalLocation> locations;
   final RentalLocation? selectedLocation;
+  final int selectedLocationRequestId;
   final double? userLatitude;
   final double? userLongitude;
   final int focusUserLocationRequestId;
@@ -24,6 +29,7 @@ class MapCanvasWidget extends StatefulWidget {
     required this.styleUrl,
     required this.locations,
     this.selectedLocation,
+    required this.selectedLocationRequestId,
     this.userLatitude,
     this.userLongitude,
     required this.focusUserLocationRequestId,
@@ -38,17 +44,17 @@ class MapCanvasWidget extends StatefulWidget {
 class _MapCanvasWidgetState extends State<MapCanvasWidget> {
   final Completer<TrackAsiaMapController> _mapController = Completer();
   final Map<String, RentalLocation> _symbolLocationMap = {};
+
   bool _symbolLayerConfigured = false;
   bool _isRenderingSymbols = false;
   bool _isProgrammaticMove = false;
-
-  static const _initialPosition = CameraPosition(
-    target: LatLng(10.7766, 106.7009),
-    zoom: 15,
-  );
-
   bool _styleLoaded = false;
   bool _imagesAdded = false;
+
+  static const CameraPosition _initialPosition = CameraPosition(
+    target: LatLng(10.7766, 106.7009),
+    zoom: 16,
+  );
 
   @override
   void didUpdateWidget(covariant MapCanvasWidget oldWidget) {
@@ -58,7 +64,8 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
       _renderSymbols();
     }
 
-    if (oldWidget.selectedLocation?.id != widget.selectedLocation?.id &&
+    if (oldWidget.selectedLocationRequestId !=
+            widget.selectedLocationRequestId &&
         widget.selectedLocation != null) {
       _focusLocation(
         widget.selectedLocation!.latitude,
@@ -176,6 +183,7 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
 
   Future<void> _focusUserLocation() async {
     if (widget.userLatitude == null || widget.userLongitude == null) return;
+
     final controller = await _mapController.future;
     await controller.animateCamera(
       CameraUpdate.newLatLngZoom(
@@ -187,22 +195,47 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
 
   Future<void> _focusLocation(double lat, double lng) async {
     _isProgrammaticMove = true;
+
     final controller = await _mapController.future;
     await controller.animateCamera(
       CameraUpdate.newLatLngZoom(LatLng(lat, lng), 16),
     );
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 300));
     _isProgrammaticMove = false;
   }
 
   Future<void> _onMarkerTap(RentalLocation tappedLocation) async {
     widget.setCurrentSelectedLocation(tappedLocation);
-    await _focusLocation(
-      tappedLocation.latitude,
-      tappedLocation.longitude,
-    );
-    debugPrint('Show ${tappedLocation.name} detail');
+
+    if (!mounted) return;
+
+    switch (tappedLocation.type) {
+      case MapFilterType.car:
+      case MapFilterType.motorbike:
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => VehicleDetailPage(locationId: tappedLocation.id),
+          ),
+        );
+        break;
+
+      case MapFilterType.parking:
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ParkingDetailPage(locationId: tappedLocation.id),
+          ),
+        );
+        break;
+
+      case MapFilterType.sharing:
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ShareDetailPage(locationId: tappedLocation.id),
+          ),
+        );
+        break;
+    }
   }
 
   @override
@@ -213,10 +246,9 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
       myLocationEnabled: true,
       myLocationTrackingMode: MyLocationTrackingMode.tracking,
       myLocationRenderMode: MyLocationRenderMode.compass,
-      onCameraIdle: () async {
-        if (_isProgrammaticMove) return;
-        widget.unselectedLocation();
-      },
+      compassViewPosition: CompassViewPosition.bottomRight,
+      compassViewMargins: Point(20, 65),
+
       onMapCreated: (controller) {
         if (!_mapController.isCompleted) {
           _mapController.complete(controller);
@@ -232,8 +264,16 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
       onStyleLoadedCallback: () async {
         _styleLoaded = true;
         _symbolLayerConfigured = false;
+
         await _renderSymbols();
-        await _focusUserLocation();
+        if (widget.selectedLocation != null) {
+          await _focusLocation(
+            widget.selectedLocation!.latitude,
+            widget.selectedLocation!.longitude,
+          );
+        } else {
+          await _focusUserLocation();
+        }
       },
       onMapClick: (point, latLng) {
         FocusManager.instance.primaryFocus?.unfocus();

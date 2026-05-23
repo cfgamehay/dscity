@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/enum.dart';
-import '../../../data/model/map/rental_location.dart';
 
+import '../../../core/constants/enum.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../data/models/map/rental_location.dart';
 
 class NearbyLocationCard extends StatelessWidget {
   final RentalLocation location;
@@ -53,9 +54,9 @@ class NearbyLocationCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${location.distanceText} • ${location.statusText}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: Colors.green.shade700,
+                      color: AppColors.success,
                     ),
                   ),
                 ],
@@ -63,10 +64,10 @@ class NearbyLocationCard extends StatelessWidget {
             ),
             Text(
               location.priceText,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Colors.green.shade700,
+                color: AppColors.success,
               ),
             ),
           ],
