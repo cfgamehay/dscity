@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/theme/theme.dart';
 import '../provider/signup_provider.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -57,6 +58,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     final signupState = ref.watch(signupProvider);
     final color = Theme.of(context).colorScheme;
+    const authFieldFillColor = AppColors.surfaceVariant;
+    const authFieldBorderColor = AppColors.outline;
 
     return SingleChildScrollView(
       child: Form(
@@ -78,6 +81,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               }
               ,
               autovalidateMode: AutovalidateMode.onUserInteraction,
+              fillColor: authFieldFillColor,
+              enabledBorderColor: authFieldBorderColor,
+              focusedBorderColor: AppColors.primary,
             ),
             SizedBox(height: 12),
             CustomTextField(
@@ -93,6 +99,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 return message != '' ? message : null;
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
+              fillColor: authFieldFillColor,
+              enabledBorderColor: authFieldBorderColor,
+              focusedBorderColor: AppColors.primary,
             ),
             SizedBox(height: 12),
             CustomTextField(
@@ -109,6 +118,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
               isPassword: true,
+              fillColor: authFieldFillColor,
+              enabledBorderColor: authFieldBorderColor,
+              focusedBorderColor: AppColors.primary,
             ),
             SizedBox(height: 12),
             CustomTextField(
@@ -126,6 +138,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
               isPassword: true,
+              fillColor: authFieldFillColor,
+              enabledBorderColor: authFieldBorderColor,
+              focusedBorderColor: AppColors.primary,
             ),
             SizedBox(height: 12),
             SizedBox(

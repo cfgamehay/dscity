@@ -18,6 +18,7 @@ class MapCanvasWidget extends StatefulWidget {
   final List<RentalLocation> locations;
   final RentalLocation? selectedLocation;
   final int selectedLocationRequestId;
+  final bool canShowMyLocation;
   final double? userLatitude;
   final double? userLongitude;
   final int focusUserLocationRequestId;
@@ -30,6 +31,7 @@ class MapCanvasWidget extends StatefulWidget {
     required this.locations,
     this.selectedLocation,
     required this.selectedLocationRequestId,
+    required this.canShowMyLocation,
     this.userLatitude,
     this.userLongitude,
     required this.focusUserLocationRequestId,
@@ -241,11 +243,18 @@ class _MapCanvasWidgetState extends State<MapCanvasWidget> {
   @override
   Widget build(BuildContext context) {
     return TrackAsiaMap(
+      key: ValueKey(
+        'trackasia-map-${widget.canShowMyLocation}-${widget.styleUrl}',
+      ),
       styleString: widget.styleUrl,
       initialCameraPosition: _initialPosition,
-      myLocationEnabled: true,
-      myLocationTrackingMode: MyLocationTrackingMode.tracking,
-      myLocationRenderMode: MyLocationRenderMode.compass,
+      myLocationEnabled: widget.canShowMyLocation,
+      myLocationTrackingMode: widget.canShowMyLocation
+          ? MyLocationTrackingMode.tracking
+          : MyLocationTrackingMode.none,
+      myLocationRenderMode: widget.canShowMyLocation
+          ? MyLocationRenderMode.compass
+          : MyLocationRenderMode.normal,
       compassViewPosition: CompassViewPosition.bottomRight,
       compassViewMargins: Point(20, 65),
 

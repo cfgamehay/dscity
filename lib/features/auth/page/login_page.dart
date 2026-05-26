@@ -49,6 +49,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final loginState = ref.watch(loginProvider);
     final color = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    const authFieldFillColor = AppColors.surfaceVariant;
+    const authFieldBorderColor = AppColors.outline;
 
     return SingleChildScrollView(
       child: Form(
@@ -67,6 +69,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 return message.isNotEmpty ? message : null;
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
+              fillColor: authFieldFillColor,
+              enabledBorderColor: authFieldBorderColor,
+              focusedBorderColor: AppColors.primary,
             ),
             const SizedBox(height: 12),
             CustomTextField(
@@ -82,6 +87,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
               isPassword: true,
+              fillColor: authFieldFillColor,
+              enabledBorderColor: authFieldBorderColor,
+              focusedBorderColor: AppColors.primary,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

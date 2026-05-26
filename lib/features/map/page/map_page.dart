@@ -224,6 +224,10 @@ class _MapPageState extends ConsumerState<MapPage> {
             child: MapCanvasWidget(
               styleUrl: MapConfig.styleUrl,
               locations: state.locations,
+              canShowMyLocation: state.isLocationServiceEnabled &&
+                  state.hasLocationPermission &&
+                  state.userLatitude != null &&
+                  state.userLongitude != null,
               userLatitude: state.userLatitude,
               userLongitude: state.userLongitude,
               selectedLocation: state.selectedLocation,
